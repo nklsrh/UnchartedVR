@@ -9,6 +9,12 @@ public class BBHealthController : MonoBehaviour
 
 	System.Action OnDeath;
 
+    public void Setup(System.Action onDeath)
+    {
+        this.OnDeath = onDeath;
+        Reset();
+    }
+
     public void Reset()
     {
         current = maxHealth;
@@ -24,6 +30,22 @@ public class BBHealthController : MonoBehaviour
 			{
             	OnDeath.Invoke();
 			}
+        }
+    }
+
+    /// <summary>
+    /// OnCollisionEnter is called when this collider/rigidbody has begun
+    /// touching another rigidbody/collider.
+    /// </summary>
+    /// <param name="other">The Collision data associated with this collision.</param>
+    void OnCollisionEnter(Collision other)
+    {
+        // Debug.LogWarning("HIT : " + LayerMask.LayerToName(other.gameObject.layer));
+        if (other.gameObject.layer == LayerMask.NameToLayer("Projectile"))
+        {
+            Debug.LogWarning("ON HITTTED " + current);
+            Damage(25);
+            other.gameObject.SetActive(false);
         }
     }
 }

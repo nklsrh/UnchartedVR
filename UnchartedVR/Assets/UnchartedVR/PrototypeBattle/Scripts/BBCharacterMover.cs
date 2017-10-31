@@ -18,23 +18,28 @@ public class BBCharacterMover : MonoBehaviour
     bool isWalking = false;
     float curSpeed = 1;
 	
-    // Use this for initialization
-    public void Setup()
+    public float flungPower = 2.0f;
+
+    public virtual void Setup()
     {
         end = transform.position;
     }
 
-    // Update is called once per frame
-    public void Logic()
+    public virtual void Logic()
     {
-        if (end != transform.position && isWalking && pathCalculated)
+        if (end != transform.position && isWalking)
         {
             end = new Vector3(end.x, 0, end.z);
+            nav.SetDestination(end);
 
             // transform.position += (end - transform.position) * curSpeed * Time.deltaTime;
             // nav.Move((nav.nextPosition - nav.transform.position).normalized * curSpeed * Time.deltaTime);
             //rigidbody.MovePosition((end - transform.position) * curSpeed * Time.deltaTime);
-            transform.LookAt(end);
+            // if ((end - transform.position).sqrMagnitude > 1.0f)
+            {
+                transform.LookAt(end);
+                transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
+            }
         }
         posLastFrame = transform.position;
     }
@@ -50,7 +55,7 @@ public class BBCharacterMover : MonoBehaviour
     NavMeshPath pahttt;
     bool pathCalculated;
 
-    internal void MoveTo(Vector3 end)
+    internal virtual void MoveTo(Vector3 end)
     {
         this.end = end;
         isWalking = true;
@@ -58,23 +63,36 @@ public class BBCharacterMover : MonoBehaviour
         nav.SetDestination(end);
     }
 
-    public void GetPushed(Vector3 push)
+    public virtual void GetPushed(Vector3 push)
     {
         isWalking = false;
-
     }
 
-    internal void GetFlung(Vector3 direction, int force, Vector3 from)
+    internal virtual void GetFlung(Vector3 direction, float force, Vector3 from)
     {
         isWalking = false;
 
-        rigidbody.AddForce(direction * force, ForceMode.Impulse);
+        rigidbody.AddForce(direction.normalized * force, ForceMode.Impulse);
+        rigidbody.AddRelativeTorque(Vector3.Cross(direction, transform.right), ForceMode.Impulse);
 
         transform.LookAt(from);
     }
 
-	public void TeleportTo(Vector3 position)
+	public virtual void TeleportTo(Vector3 position)
 	{
 		transform.position = position;
 	}
+
+    public void Ragdoll(Vector3 direction)
+    {
+        nav.enabled = false;
+        rigidbody.isKinematic = false;
+        GetFlung(direction, flungPower, transform.position);
+    }
+
+    public void Reset()
+    {
+        nav.enabled = true;
+        rigidbody.isKinematic = true;
+    }
 }

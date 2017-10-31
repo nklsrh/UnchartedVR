@@ -157,12 +157,12 @@ public class OVRCameraRig : MonoBehaviour
         rightHandAnchor.localPosition = OVRInput.GetLocalControllerPosition(OVRInput.Controller.RTouch);
 
 
-		#if UNITY_EDITOR
-		float mouseX = (Input.mousePosition.x - (Screen.width / 2) / (Screen.width/2));
-		float mouseY = (Input.mousePosition.y - (Screen.height/ 2) / (Screen.height/2));
-		transform.LookAt(transform.position + new Vector3(mouseX * 100, mouseY * 30, mouseY * 100));
-		Debug.Log("TRACKER ANCHOR: " + trackerAnchor.localRotation.ToString());
-		#endif
+		// #if UNITY_EDITOR
+		// float mouseX = (Input.mousePosition.x - (Screen.width / 2) / (Screen.width/2));
+		// float mouseY = (Input.mousePosition.y - (Screen.height/ 2) / (Screen.height/2));
+		// transform.LookAt(transform.position + new Vector3(mouseX * 100, mouseY * 30, mouseY * 100));
+		// Debug.Log("TRACKER ANCHOR: " + trackerAnchor.localRotation.ToString());
+		// #endif
 
 
 		if (UpdatedAnchors != null)

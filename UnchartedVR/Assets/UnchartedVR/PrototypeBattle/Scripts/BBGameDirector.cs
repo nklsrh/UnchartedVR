@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class BBGameDirector : MonoBehaviour {
 
-	public List<BBPlayerController> ;
-	
-	// Use this for initialization
+	public List<BBCharacterController> characters;
+	public BBLevelAIData level;
+
+	public BBVRController vrController;
+
 	void Start () 
 	{
 		Setup();	
@@ -14,12 +16,28 @@ public class BBGameDirector : MonoBehaviour {
 
 	public void Setup()
 	{
-		player.Setup();
+		level.Setup();
+		
+		foreach (BBCharacterController c in characters)
+		{
+			c.Setup();
+
+			if (c.mover is BBAIMover)
+			{
+				(c.mover as BBAIMover).SetupAI(level);
+			}
+		}
+
+		vrController.Setup();
 	}
 	
-	// Update is called once per frame
 	void Update () 
 	{
-		player.Logic();	
+		for (int i = 0; i < characters.Count; i++)
+		{
+			characters[i].Logic();
+		}
+
+		vrController.Logic();
 	}
 }

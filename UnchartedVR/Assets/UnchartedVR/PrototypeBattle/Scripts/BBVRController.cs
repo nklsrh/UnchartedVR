@@ -123,18 +123,18 @@ public class BBVRController : MonoBehaviour
 
     void CheckFiring()
     {
-
-        Vector3 newSmoothenedHandMovement = (pointerAttack.position - transform.position).normalized * grabDistance;// Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
+        Vector3 newSmoothenedHandMovement = transform.InverseTransformPoint(pointerAttack.position).normalized * grabDistance;// Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
         Vector3 deltaOverFrame = (newSmoothenedHandMovement - smoothenedHandMovement);
         smoothenedVelocity = deltaOverFrame;
         smoothenedHandMovement = newSmoothenedHandMovement;
 
-        // smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
-        #if UNITY_EDITOR
-        handTransform.position = transform.position + smoothenedHandMovement; 
-        #else
+        //smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
+#if UNITY_EDITOR
+        handTransform.position = transform.TransformPoint(smoothenedHandMovement);
+#else
+        handTransform.position = transform.TransformPoint(smoothenedHandMovement);
         handTransform.rotation = handController.m_model.transform.rotation;
-        #endif
+#endif
 
         if (IsHoldingTrigger)
         {

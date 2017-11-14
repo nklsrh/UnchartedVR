@@ -19,6 +19,8 @@ public class BBVRController : MonoBehaviour
 	public Transform pointerAttack;
     public Transform ball;
 
+    public Transform handTransform;
+
     Vector3 vel;
     Vector3 acc;
 
@@ -57,15 +59,12 @@ public class BBVRController : MonoBehaviour
     public void Setup()
     {
         raycastLayer = LayerMask.GetMask("Walkable");
-        //(1 << LayerMask.NameToLayer("Walkable"));
-        // raycastLayer = ~(1 << LayerMask.NameToLayer("Player"));
-        // raycastLayer |= (1 << LayerMask.NameToLayer("Default"));
     }
 
     public void Logic()
     {
 
-        RaycastGaze();
+        // RaycastGaze();
 
 
         Vector2 touchPadInput =  OVRInput.Get(OVRInput.Axis2D.PrimaryTouchpad);
@@ -79,19 +78,11 @@ public class BBVRController : MonoBehaviour
         }
 #endif
 
-/// ORIGINAL MOVEMENT LOGIC -- now we just teleport
-        // Vector3 finalAceleration = cameraRig.transform.TransformDirection(accelerator);
-        // acc += Vector3.Lerp(acc, accelerator, accelerationlerp * Time.deltaTime);
-        // vel += acc;
-        // vel = Vector3.Lerp(vel, Vector3.zero, decelerator * Time.deltaTime);
-        // acc = Vector3.Lerp(acc, Vector3.zero, accelerationDecelerator * Time.deltaTime);
-        // vel = Vector3.ClampMagnitude(vel, clampMagnitude);
-
         bool isJustClicked = OVRInput.GetUp(OVRInput.Button.One);
         
         if (HasHeld)
         {
-            firstPressTeleportPoint = pointerMove.position;
+            firstPressTeleportPoint = pointerAttack.position;
             teleportReticule.position = firstPressTeleportPoint;
             teleportReticule.up = teleportReticuleUpNormal;
 
@@ -111,8 +102,9 @@ public class BBVRController : MonoBehaviour
 
         if (isJustClicked)
         {
-            playerController.mover.TeleportTo(this.pointerMove.transform.position);
+            playerController.mover.TeleportTo(this.pointerAttack.transform.position);
             playerController.mover.transform.rotation = Quaternion.LookRotation(teleportLookDirection, Vector3.up);
+            // TODO - orient using VR controller's forward direction as well
         }
 
         transform.position = playerController.transform.position + Vector3.up * cameraHeight;
@@ -125,31 +117,45 @@ public class BBVRController : MonoBehaviour
     }
 
     GameObject currentThrowingObject = null;
+    Vector3 smoothenedVelocity;
     Vector3 smoothenedHandMovement;
     Vector3 originalPickupPosition;
 
     void CheckFiring()
     {
+
+        Vector3 newSmoothenedHandMovement = (pointerAttack.position - transform.position).normalized * grabDistance;// Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
+        Vector3 deltaOverFrame = (newSmoothenedHandMovement - smoothenedHandMovement);
+        smoothenedVelocity = deltaOverFrame;
+        smoothenedHandMovement = newSmoothenedHandMovement;
+
+        // smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
+        #if UNITY_EDITOR
+        handTransform.position = transform.position + smoothenedHandMovement; 
+        #else
+        handTransform.rotation = handController.m_model.transform.rotation;
+        #endif
+
         if (IsHoldingTrigger)
         {
             if (currentThrowingObject == null)
             {
                 GameObject go = GameObject.Instantiate(ball.gameObject);
                 go.GetComponent<Rigidbody>().isKinematic = true;
-                go.transform.position = pointerAttack.position;
+                go.transform.position = handTransform.position;
                 currentThrowingObject = go;
                 originalPickupPosition = go.transform.position;
             }
             else
             {
-                smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
-                currentThrowingObject.transform.position = transform.position + smoothenedHandMovement; 
+                currentThrowingObject.transform.position = handTransform.position;
+                currentThrowingObject.transform.rotation = handTransform.rotation;
             }
         }
         else if (currentThrowingObject != null)
         {
             currentThrowingObject.GetComponent<Rigidbody>().isKinematic = false;
-            currentThrowingObject.GetComponent<Rigidbody>().AddForce(smoothenedHandMovement * grabThrowPower, ForceMode.VelocityChange);
+            currentThrowingObject.GetComponent<Rigidbody>().AddForce(smoothenedVelocity * grabThrowPower * Time.deltaTime, ForceMode.VelocityChange);
             currentThrowingObject = null;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class VRSpaceship : MonoBehaviour
 {
@@ -41,6 +42,7 @@ public class VRSpaceship : MonoBehaviour
 
 
     Vector3 gyroRotation;
+    public Text txtDebug;
 
 
     void Update ()
@@ -96,18 +98,39 @@ public class VRSpaceship : MonoBehaviour
 
         // Vector3 localRotEuler = originalParnet.eulerAngles;
 
-        Vector3 joystickAngle = Quaternion.FromToRotation(shipppp.transform.forward, (pointerSphere.transform.position - shipppp.transform.position).normalized).eulerAngles * gyroMultiplier;
-        //OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote).eulerAngles * gyroMultiplier;
+        //Vector3 joystickAngle = Quaternion.FromToRotation(shipppp.transform.forward, (pointerSphere.transform.position - shipppp.transform.position).normalized).eulerAngles * gyroMultiplier;
+
+
+        Vector3 rawAngles = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote).eulerAngles;
+
+        if (rawAngles.x > 180)
+        {
+            rawAngles.x -= 360;
+        }
+        if (rawAngles.y > 180)
+        {
+            rawAngles.y -= 360;
+        }
+        if (rawAngles.z > 180)
+        {
+            rawAngles.z -= 360;
+        }
+
+        Vector3 cleanedAngles = new Vector3(
+            Mathf.Clamp((rawAngles.x - -20) / 30, -1, 1),
+            0,
+            Mathf.Clamp((rawAngles.z - 0) / 50, -1, 1)
+        );
+
+        Vector3 joystickAngle = cleanedAngles;
 
 #if UNITY_EDITOR
-        // joystickAngle = new Vector3(Input.GetAxis("Vertical"), 0, -Input.GetAxis("Horizontal"));
+        joystickAngle = new Vector3(Input.GetAxis("Vertical"), 0, -Input.GetAxis("Horizontal"));
 #endif
 
         gyroRotation = Vector3.Slerp(gyroRotation, joystickAngle, gyroLerp * Time.deltaTime);
-        
-        Quaternion newRot = Quaternion.Slerp(shipppp.transform.rotation, Quaternion.LookRotation((projectedPoint - shipppp.transform.position).normalized, shipppp.transform.up), 10 * Time.deltaTime);//.eulerAngles * gyroMultiplier;
 
-        gyroRotation = newRot.eulerAngles * gyroMultiplier;
+        txtDebug.text = rawAngles.ToString() + "\n" + cleanedAngles.ToString();
 
         shipppp.transform.Rotate(gyroRotation, Space.Self);
 
@@ -117,7 +140,7 @@ public class VRSpaceship : MonoBehaviour
 
         float thrust = (Input.GetButton("Fire1") ? 1.0f : 0f);
 
-        Vector3 accelerator = new Vector3(0, 0, (touchPadInput.y + 1.0f) / 2.0f);
+        Vector3 accelerator = new Vector3(0, 0, touchPadInput.y);
 #if UNITY_EDITOR
         accelerator = new Vector3(0, 0, thrust);
 #endif

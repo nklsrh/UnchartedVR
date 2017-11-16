@@ -55,10 +55,11 @@ public class BBVRController : MonoBehaviour
 
     float distanceOfLastRaycastAttack;
     RaycastHit hitInfoAttack;
-    
+    Collider colliderLastHit;
+
     public void Setup()
     {
-        raycastLayer = LayerMask.GetMask("Walkable");
+        raycastLayer = LayerMask.GetMask("Walkable", "Grabbable");
     }
 
     public void Logic()
@@ -121,6 +122,8 @@ public class BBVRController : MonoBehaviour
     Vector3 smoothenedHandMovement;
     Vector3 originalPickupPosition;
 
+    float originalDistanceSquared = 10;
+
     void CheckFiring()
     {
         Vector3 newSmoothenedHandMovement = transform.InverseTransformPoint(pointerAttack.position).normalized * grabDistance;// Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
@@ -131,6 +134,7 @@ public class BBVRController : MonoBehaviour
         //smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
 #if UNITY_EDITOR
         handTransform.position = transform.TransformPoint(smoothenedHandMovement);
+        //handTransform.forward = (pointerAttack.transform.position - Camera.main.transform.position);
 #else
         handTransform.position = transform.TransformPoint(smoothenedHandMovement);
         handTransform.rotation = handController.m_model.transform.rotation;
@@ -138,18 +142,31 @@ public class BBVRController : MonoBehaviour
 
         if (IsHoldingTrigger)
         {
-            if (currentThrowingObject == null)
+            if (colliderLastHit != null)
             {
-                GameObject go = GameObject.Instantiate(ball.gameObject);
-                go.GetComponent<Rigidbody>().isKinematic = true;
-                go.transform.position = handTransform.position;
-                currentThrowingObject = go;
-                originalPickupPosition = go.transform.position;
+                if (colliderLastHit.gameObject.layer == LayerMask.NameToLayer("Grabbable"))
+                {
+                    currentThrowingObject = colliderLastHit.gameObject;
+                    originalPickupPosition = currentThrowingObject.transform.position;
+                    originalDistanceSquared = distanceOfLastRaycastAttack;
+                }
             }
-            else
+
+
             {
-                currentThrowingObject.transform.position = handTransform.position;
-                currentThrowingObject.transform.rotation = handTransform.rotation;
+                if (currentThrowingObject == null)
+                {
+                    //GameObject go = GameObject.Instantiate(ball.gameObject);
+                    //go.GetComponent<Rigidbody>().isKinematic = true;
+                    //go.transform.position = handTransform.position;
+                    //currentThrowingObject = go;
+                    //originalPickupPosition = go.transform.position;
+                }
+                else
+                {
+                    currentThrowingObject.transform.position = handTransform.position;
+                    currentThrowingObject.transform.rotation = handTransform.rotation;
+                }
             }
         }
         else if (currentThrowingObject != null)
@@ -205,6 +222,8 @@ public class BBVRController : MonoBehaviour
             pointerAttack.transform.position = handController.m_model.transform.position + handController.m_model.transform.forward * distanceOfLastRaycastAttack;
 		}
 #endif
+
+        colliderLastHit = hitInfoAttack.collider;
     }
 
     /// Returns true the frame during which the user pushed down on the button

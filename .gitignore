@@ -3,3 +3,5 @@ UnchartedVR/Library/
 *.csproj
 *.sln
 *.suo
+*.db.meta
+*.db

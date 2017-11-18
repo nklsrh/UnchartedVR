@@ -43,6 +43,7 @@ public class VRSpaceship : MonoBehaviour
 
     Vector3 gyroRotation;
     public Text txtDebug;
+    public Text txtSpeed;
 
 
     void Update ()
@@ -81,24 +82,12 @@ public class VRSpaceship : MonoBehaviour
 		}
 
 
-        Vector3 projectedPoint = pointerSphere.transform.position; // originPoint + originDirection * 10000;
-
-
         Vector2 touchPadInput =  OVRInput.Get(OVRInput.Axis2D.PrimaryTouchpad);
 
 
 
         Quaternion handRotation = handController.m_model.transform.rotation;
 
-
-        // Transform originalParnet = handController.m_model.transform.parent;
-        // handController.m_model.transform.SetParent(cameraRig.transform, true);
-        // Quaternion localRotation = handController.m_model.transform.localRotation;
-        // handController.m_model.transform.SetParent(originalParnet, true);
-
-        // Vector3 localRotEuler = originalParnet.eulerAngles;
-
-        //Vector3 joystickAngle = Quaternion.FromToRotation(shipppp.transform.forward, (pointerSphere.transform.position - shipppp.transform.position).normalized).eulerAngles * gyroMultiplier;
 
 
         Vector3 rawAngles = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote).eulerAngles;
@@ -130,15 +119,11 @@ public class VRSpaceship : MonoBehaviour
 
         gyroRotation = Vector3.Slerp(gyroRotation, joystickAngle, gyroLerp * Time.deltaTime);
 
-        txtDebug.text = rawAngles.ToString() + "\n" + cleanedAngles.ToString();
-
         shipppp.transform.Rotate(gyroRotation, Space.Self);
-
-        // shipppp.transform.Rotate(gyroRotation, Space.Self);
 
         gyroIndicator.localRotation = Quaternion.Euler(gyroRotation);
 
-        float thrust = (Input.GetButton("Fire1") ? 1.0f : 0f);
+        float thrust = (Input.GetButton("Thrust") ? 1.0f : 0f);
 
         Vector3 accelerator = new Vector3(0, 0, touchPadInput.y);
 #if UNITY_EDITOR
@@ -148,17 +133,16 @@ public class VRSpaceship : MonoBehaviour
 
         Vector3 finalAceleration = shipppp.transform.TransformDirection(accelerator);
 
-        acc += Vector3.Lerp(acc, accelerator, accelerationlerp * Time.deltaTime);
+        acc = Vector3.Lerp(acc, accelerator, accelerationlerp * Time.deltaTime);
 
         vel += acc;
-
-
-        vel = Vector3.Lerp(vel, Vector3.zero, decelerator * Time.deltaTime);
-        acc = Vector3.Lerp(acc, Vector3.zero, accelerationDecelerator * Time.deltaTime);
 
         vel = Vector3.ClampMagnitude(vel, clampMagnitude);
 
         shipppp.transform.Translate(vel);
+
+        vel = Vector3.Lerp(vel, Vector3.zero, decelerator * Time.deltaTime);
+        acc = Vector3.Lerp(acc, Vector3.zero, accelerationDecelerator * Time.deltaTime);
 
         cameraRig.transform.position = Vector3.Lerp(cameraRig.transform.position, shipSeat.transform.position, cameraLerp * Time.deltaTime);
         cameraRig.transform.rotation = shipSeat.transform.rotation;
@@ -166,21 +150,25 @@ public class VRSpaceship : MonoBehaviour
         cameraZoomLens.LookAt(pointerSphere);
 
 
-// TELEPORTING
+        txtDebug.text = rawAngles.ToString() + "\n" + cleanedAngles.ToString();
 
-//         bool isJustClicked = OVRInput.GetUp(OVRInput.Button.One);
-// #if UNITY_EDITOR
-//         isJustClicked = Input.GetMouseButtonUp(0);
-// #endif
+        txtSpeed.text = (vel.sqrMagnitude * 100000).ToString("#00");
 
-//         if (isJustClicked)
-//         {
-//             shipppp.transform.position = this.pointerSphere.transform.position + Vector3.up * 0.5f;
-//         }
+        // TELEPORTING
+
+        //         bool isJustClicked = OVRInput.GetUp(OVRInput.Button.One);
+        // #if UNITY_EDITOR
+        //         isJustClicked = Input.GetMouseButtonUp(0);
+        // #endif
+
+        //         if (isJustClicked)
+        //         {
+        //             shipppp.transform.position = this.pointerSphere.transform.position + Vector3.up * 0.5f;
+        //         }
 
 
 
-// MOVE MONITOR TO FRONT OF EYE
+        // MOVE MONITOR TO FRONT OF EYE
 
         // monitorTransform.position = Vector3.Lerp(monitorTransform.position, centreCameraTransform.TransformPoint(monitorPositioning), monitorLerp * Time.deltaTime);
         // monitorTransform.rotation = centreCameraTransform.rotation;

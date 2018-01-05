@@ -1,0 +1,9 @@
+GEAR VR Controller 
+
+angle values for nice and easy controlled 6dof flight
+
+pitch forward backward = 20  ....    -40   X
+
+yaw left right -40 .... 40  Y
+
+roll left right = 80 .... -50  Z

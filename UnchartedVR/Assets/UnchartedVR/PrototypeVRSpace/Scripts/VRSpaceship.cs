@@ -18,8 +18,6 @@ public class VRSpaceship : MonoBehaviour
 
     public Transform gyroIndicator;
 
-    public float rotationLerp = 0.001f;
-
     public float clampMagnitude = 10;
 
     public float accelerationlerp = 1;
@@ -41,7 +39,7 @@ public class VRSpaceship : MonoBehaviour
     float distanceOfLastRaycast;
 
 
-    Vector3 gyroRotation;
+    Quaternion gyroRotation;
     public Text txtDebug;
     public Text txtSpeed;
 
@@ -84,11 +82,7 @@ public class VRSpaceship : MonoBehaviour
 
         Vector2 touchPadInput =  OVRInput.Get(OVRInput.Axis2D.PrimaryTouchpad);
 
-
-
         Quaternion handRotation = handController.m_model.transform.rotation;
-
-
 
         Vector3 rawAngles = OVRInput.GetLocalControllerRotation(OVRInput.Controller.RTrackedRemote).eulerAngles;
 
@@ -105,35 +99,44 @@ public class VRSpaceship : MonoBehaviour
             rawAngles.z -= 360;
         }
 
-        Vector3 cleanedAngles = new Vector3(
-            Mathf.Clamp((rawAngles.x - -20) / 30, -1, 1),
-            0,
-            Mathf.Clamp((rawAngles.z - 0) / 50, -1, 1)
-        );
 
-        Vector3 joystickAngle = cleanedAngles;
-
+        float anglePitch = Mathf.Clamp((rawAngles.x - -20) / 30, -1, 1);
+        float angleRoll = -Mathf.Clamp((rawAngles.z - 0) / 50, -1, 1);
+        anglePitch = touchPadInput.y;
 #if UNITY_EDITOR
-        joystickAngle = new Vector3(Input.GetAxis("Vertical"), 0, -Input.GetAxis("Horizontal"));
-#endif
-
-        gyroRotation = Vector3.Slerp(gyroRotation, joystickAngle, gyroLerp * Time.deltaTime);
-
-        shipppp.transform.Rotate(gyroRotation, Space.Self);
-
-        gyroIndicator.localRotation = Quaternion.Euler(gyroRotation);
-
-        float thrust = (Input.GetButton("Thrust") ? 1.0f : 0f);
-
-        Vector3 accelerator = new Vector3(0, 0, touchPadInput.y);
-#if UNITY_EDITOR
-        accelerator = new Vector3(0, 0, thrust);
+        angleRoll = Input.GetAxis("Horizontal");
+        anglePitch = Input.GetAxis("Vertical");
 #endif
 
 
-        Vector3 finalAceleration = shipppp.transform.TransformDirection(accelerator);
 
-        acc = Vector3.Lerp(acc, accelerator, accelerationlerp * Time.deltaTime);
+
+        Quaternion joystickAngle = Quaternion.Euler(0, angleRoll, 0);
+
+        gyroRotation = Quaternion.Slerp(gyroRotation, joystickAngle, gyroLerp * Time.deltaTime);
+
+        shipppp.transform.Rotate(gyroRotation.eulerAngles, Space.Self);
+
+        gyroIndicator.localRotation = gyroRotation;
+
+
+
+        float updownThrust = touchPadInput.y;
+#if UNITY_EDITOR
+        updownThrust = Input.GetAxis("Vertical");
+#endif
+
+
+
+        float accelerator = IsHoldingTrigger ? 1 : 0;
+
+
+
+        Vector3 accelerationVector = new Vector3(0, updownThrust, accelerator);
+
+        Vector3 finalAceleration = shipppp.transform.TransformDirection(accelerationVector);
+
+        acc = Vector3.Lerp(acc, accelerationVector, accelerationlerp * Time.deltaTime);
 
         vel += acc;
 
@@ -149,30 +152,9 @@ public class VRSpaceship : MonoBehaviour
 
         cameraZoomLens.LookAt(pointerSphere);
 
-
-        txtDebug.text = rawAngles.ToString() + "\n" + cleanedAngles.ToString();
+        txtDebug.text = OVRPlugin.GetAppFramerate().ToString("00 FPS") + transform.position.ToString();
 
         txtSpeed.text = (vel.sqrMagnitude * 100000).ToString("#00");
-
-        // TELEPORTING
-
-        //         bool isJustClicked = OVRInput.GetUp(OVRInput.Button.One);
-        // #if UNITY_EDITOR
-        //         isJustClicked = Input.GetMouseButtonUp(0);
-        // #endif
-
-        //         if (isJustClicked)
-        //         {
-        //             shipppp.transform.position = this.pointerSphere.transform.position + Vector3.up * 0.5f;
-        //         }
-
-
-
-        // MOVE MONITOR TO FRONT OF EYE
-
-        // monitorTransform.position = Vector3.Lerp(monitorTransform.position, centreCameraTransform.TransformPoint(monitorPositioning), monitorLerp * Time.deltaTime);
-        // monitorTransform.rotation = centreCameraTransform.rotation;
-
 
         gyroIndicator.position = Vector3.Lerp(gyroIndicator.position, centreCameraTransform.TransformPoint(monitorPositioning), monitorLerp * Time.deltaTime);
 	}
@@ -186,5 +168,16 @@ public class VRSpaceship : MonoBehaviour
 		{
 			oldMesh.material = oldM;
 		}
-	}
+    }
+    public bool IsHoldingTrigger
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return Input.GetMouseButton(0);
+#else
+            return OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger);
+#endif
+        }
+    }
 }

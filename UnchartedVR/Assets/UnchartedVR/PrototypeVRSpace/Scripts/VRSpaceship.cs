@@ -52,6 +52,9 @@ public class VRSpaceship : MonoBehaviour
     float upThrustLerped;
     public float upThrustLerp = 2.0f;
 
+
+    public float accelerationMultiplier = 10;
+
     void Update ()
     {
         Vector3 originPoint = handController.m_model.transform.position;
@@ -148,17 +151,17 @@ public class VRSpaceship : MonoBehaviour
 
         shipppp.transform.localRotation = Quaternion.Slerp(shipppp.transform.localRotation, easedRot, easeRotationLerp * Time.deltaTime);
 
-        Vector3 flatForward = new Vector3(shipppp.transform.forward.x, 0, shipppp.transform.forward.z);
+        Vector3 flatForward = new Vector3(shipppp.transform.forward.x    , 0, shipppp.transform.forward.z);
 
         Vector3 accelerationVector = upThrustLerped * Vector3.up + accelerator * flatForward;
 
         acc = Vector3.Lerp(acc, accelerationVector, accelerationlerp * Time.deltaTime);
 
-        vel += acc;
+        vel += acc * accelerationMultiplier;
 
         vel = Vector3.ClampMagnitude(vel, clampMagnitude);
 
-        shipppp.transform.Translate(vel);
+        shipppp.transform.Translate(vel * Time.deltaTime);
 
         vel = Vector3.Lerp(vel, Vector3.zero, decelerator * Time.deltaTime);
         acc = Vector3.Lerp(acc, Vector3.zero, accelerationDecelerator * Time.deltaTime);
@@ -190,7 +193,7 @@ public class VRSpaceship : MonoBehaviour
         get
         {
 #if UNITY_EDITOR
-            return Input.GetMouseButton(0);
+            return Input.GetButton("Thrust");
 #else
             return OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger);
 #endif

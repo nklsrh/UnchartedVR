@@ -16,6 +16,15 @@ ModelImporter:
     100016: Floorplane
     100018: TopBar
     100020: WeirdBullbar
+    100022: Cube
+    100024: Joystick
+    100026: JoystickBase
+    100028: Detectors.001
+    100030: Submarine.001
+    100032: Floorplane.001
+    100034: Submarine.002
+    100036: JoystickParent
+    100038: Screens
     400000: Camera
     400002: Lamp
     400004: //RootNode
@@ -27,6 +36,15 @@ ModelImporter:
     400016: Floorplane
     400018: TopBar
     400020: WeirdBullbar
+    400022: Cube
+    400024: Joystick
+    400026: JoystickBase
+    400028: Detectors.001
+    400030: Submarine.001
+    400032: Floorplane.001
+    400034: Submarine.002
+    400036: JoystickParent
+    400038: Screens
     2300000: Submarine
     2300002: Connectors
     2300004: Detectors
@@ -35,6 +53,15 @@ ModelImporter:
     2300010: Floorplane
     2300012: TopBar
     2300014: WeirdBullbar
+    2300016: Cube
+    2300018: Joystick
+    2300020: JoystickBase
+    2300022: Detectors.001
+    2300024: Submarine.001
+    2300026: Floorplane.001
+    2300028: Submarine.002
+    2300030: JoystickParent
+    2300032: Screens
     3300000: Submarine
     3300002: Connectors
     3300004: Detectors
@@ -43,6 +70,15 @@ ModelImporter:
     3300010: Floorplane
     3300012: TopBar
     3300014: WeirdBullbar
+    3300016: Cube
+    3300018: Joystick
+    3300020: JoystickBase
+    3300022: Detectors.001
+    3300024: Submarine.001
+    3300026: Floorplane.001
+    3300028: Submarine.002
+    3300030: JoystickParent
+    3300032: Screens
     4300000: Submarine
     4300002: Rotor
     4300004: Joints
@@ -51,6 +87,15 @@ ModelImporter:
     4300010: TopBar
     4300012: Floorplane
     4300014: WeirdBullbar
+    4300016: Joystick
+    4300018: JoystickBase
+    4300020: Cube
+    4300022: Detectors.001
+    4300024: Submarine.001
+    4300026: Floorplane.001
+    4300028: Submarine.002
+    4300030: JoystickParent
+    4300032: Screens
   materials:
     importMaterials: 1
     materialName: 0

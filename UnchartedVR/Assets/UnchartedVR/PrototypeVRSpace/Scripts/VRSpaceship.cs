@@ -17,6 +17,7 @@ public class VRSpaceship : MonoBehaviour
     public Transform cameraZoomLens;
 
     public Transform gyroIndicator;
+    public Transform joystick;
 
     public float clampMagnitude = 10;
 
@@ -43,6 +44,13 @@ public class VRSpaceship : MonoBehaviour
     public Text txtDebug;
     public Text txtSpeed;
 
+
+    Quaternion easedRot;
+    public float easeRotationLerp = 0.5f;
+    public float easeRotationAmount = 10;
+
+    float upThrustLerped;
+    public float upThrustLerp = 2.0f;
 
     void Update ()
     {
@@ -108,9 +116,6 @@ public class VRSpaceship : MonoBehaviour
         anglePitch = Input.GetAxis("Vertical");
 #endif
 
-
-
-
         Quaternion joystickAngle = Quaternion.Euler(0, angleRoll, 0);
 
         gyroRotation = Quaternion.Slerp(gyroRotation, joystickAngle, gyroLerp * Time.deltaTime);
@@ -121,20 +126,31 @@ public class VRSpaceship : MonoBehaviour
 
 
 
+        if (joystick)
+        {
+            joystick.transform.localRotation = Quaternion.Euler(-angleRoll * 45, anglePitch * 45, 0);
+        }
+
         float updownThrust = touchPadInput.y;
 #if UNITY_EDITOR
-        updownThrust = Input.GetAxis("Vertical");
+        updownThrust = -Input.GetAxis("Vertical");
 #endif
 
+        upThrustLerped = Mathf.Lerp(upThrustLerped, updownThrust, upThrustLerp * Time.deltaTime);
 
 
         float accelerator = IsHoldingTrigger ? 1 : 0;
 
+        easedRot = Quaternion.Euler(
+            upThrustLerped * -easeRotationAmount, 
+            shipppp.transform.localRotation.eulerAngles.y, 
+            angleRoll * -easeRotationAmount);
 
+        shipppp.transform.localRotation = Quaternion.Slerp(shipppp.transform.localRotation, easedRot, easeRotationLerp * Time.deltaTime);
 
-        Vector3 accelerationVector = new Vector3(0, updownThrust, accelerator);
+        Vector3 flatForward = new Vector3(shipppp.transform.forward.x, 0, shipppp.transform.forward.z);
 
-        Vector3 finalAceleration = shipppp.transform.TransformDirection(accelerationVector);
+        Vector3 accelerationVector = upThrustLerped * Vector3.up + accelerator * flatForward;
 
         acc = Vector3.Lerp(acc, accelerationVector, accelerationlerp * Time.deltaTime);
 

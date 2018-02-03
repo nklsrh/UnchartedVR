@@ -30,7 +30,10 @@ public class BBCharacterMover : MonoBehaviour
         if (end != transform.position && isWalking)
         {
             end = new Vector3(end.x, 0, end.z);
-            nav.SetDestination(end);
+            if (nav.isOnNavMesh)
+            {
+                nav.SetDestination(end);
+            }
 
             // transform.position += (end - transform.position) * curSpeed * Time.deltaTime;
             // nav.Move((nav.nextPosition - nav.transform.position).normalized * curSpeed * Time.deltaTime);
@@ -60,7 +63,10 @@ public class BBCharacterMover : MonoBehaviour
         this.end = end;
         isWalking = true;
         curSpeed = walkSpeed;
-        nav.SetDestination(end);
+        if (nav.isOnNavMesh)
+        {
+            nav.SetDestination(end);
+        }
     }
 
     public virtual void GetPushed(Vector3 push)

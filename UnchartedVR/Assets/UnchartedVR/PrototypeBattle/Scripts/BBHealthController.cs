@@ -8,7 +8,7 @@ public class BBHealthController : MonoBehaviour
     public float current;
 
     public System.Action OnDeath;
-    public System.Action<float> OnDamage;
+    public System.Action<float, float> OnDamage;
 
     public void Setup()
     {
@@ -35,7 +35,7 @@ public class BBHealthController : MonoBehaviour
         {
             if (OnDamage != null)
             {
-                OnDamage.Invoke(amount);
+                OnDamage.Invoke(amount, current / maxHealth);
             }
         }
     }

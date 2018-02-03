@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using DG.Tweening;
+using UnityEngine.UI;
 
 public class BBAIController : BBCharacterController 
 {
@@ -14,12 +16,22 @@ public class BBAIController : BBCharacterController
     List<HealthThing> listDamageText = new List<HealthThing>();
     int currentHealthDmaage = 0;
 
+    public Image imgHealth;
+    public Image imgHealthBackground;
+
+    public ParticleSystem particleSparks;
+
     public override void Setup()
     {
         base.Setup();
 
         health.OnDamage += Damaged;
 
+        SetupHealthUI();
+    }
+
+    private void SetupHealthUI()
+    {
         thisGuysMaterial = new Material[meshDamagedIndicator.Length];
         originalColor = new Color[meshDamagedIndicator.Length];
         for (int i = 0; i < meshDamagedIndicator.Length; i++)
@@ -28,30 +40,60 @@ public class BBAIController : BBCharacterController
             originalColor[i] = thisGuysMaterial[i].color;
         }
 
+        listDamageText.Clear();
+
         for (int i = 0; i < 4; i++)
         {
             TextMeshPro tx = Instantiate(txtHealthDamagePrototype);
-            tx.transform.position = transform.position + Vector3.up * 3.5f + (UnityEngine.Random.onUnitSphere * 1.5f);
+            SetupText(tx);
 
             HealthThing ht = new HealthThing();
             ht.timeLeft = 0;
             ht.text = tx;
             listDamageText.Add(ht);
         }
+
+        txtHealthDamagePrototype.gameObject.SetActive(false);
+        imgHealthBackground.CrossFadeAlpha(0, 0.2f, false);
     }
 
-    private void Damaged(float amount)
+    void SetupText(TextMeshPro tx)
+    {
+        tx.transform.position = transform.position + Vector3.up * 3.5f + (UnityEngine.Random.onUnitSphere * 1.5f);
+    }
+
+    private void Damaged(float amount, float healthPercent)
     {
         for (int i = 0; i < thisGuysMaterial.Length; i++)
         {
             thisGuysMaterial[i].color = Color.white;
         }
 
+        SetupText(listDamageText[currentHealthDmaage].text);
+
         listDamageText[currentHealthDmaage].timeLeft = 0.25f;
         listDamageText[currentHealthDmaage].text.gameObject.SetActive(true);
         listDamageText[currentHealthDmaage].text.text = "-" + amount;
+        listDamageText[currentHealthDmaage].text.transform.DOMove(new Vector3((UnityEngine.Random.value - 0.5f) * 2f, 1, 0), 0.5f).SetRelative();
+        listDamageText[currentHealthDmaage].text.DOFade(0, 0.15f).SetDelay(0.25f);
 
         currentHealthDmaage = (currentHealthDmaage + 1) % listDamageText.Count;
+
+        imgHealth.fillAmount = healthPercent;
+        
+        imgHealthBackground.CrossFadeAlpha(1, 0.25f, false);
+        imgHealth.gameObject.SetActive(true);
+
+        DOVirtual.DelayedCall(1.0f, () =>
+        {
+            imgHealth.gameObject.SetActive(false);
+            imgHealthBackground.CrossFadeAlpha(0, 0.25f, false);
+        });
+
+        if (particleSparks != null)
+        {
+            particleSparks.Play();
+        }
     }
 
     public override void Logic()
@@ -81,6 +123,7 @@ public class BBAIController : BBCharacterController
                 listDamageText[i].text.transform.forward = Camera.main.transform.forward;
             }
         }
+        imgHealth.canvas.transform.LookAt(-Camera.main.transform.forward);
     }
 
 	public override void Respawn()
@@ -90,6 +133,8 @@ public class BBAIController : BBCharacterController
         BBAIMover ai = mover as BBAIMover;
 
         ai.Respawn();
+
+        SetupHealthUI();
 	}
 }
 

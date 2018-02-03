@@ -7,8 +7,8 @@ public class BBCharacterController : MonoBehaviour {
 	public BBShooterController shooter;
 	public BBCharacterMover mover;
 	public BBHealthController health;
-	
-	const float RESPAWN_WAIT = 3.0f;
+
+    const float RESPAWN_WAIT = 3.0f;
 
 	protected bool isActive = false;
 	float deathWait = RESPAWN_WAIT;
@@ -17,9 +17,10 @@ public class BBCharacterController : MonoBehaviour {
 	{
 		shooter.Setup();
 		mover.Setup();
-		health.Setup(Death);
+		health.Setup();
+        health.OnDeath += Death;
 
-		isActive = true;
+        isActive = true;
 	}
 
 	public virtual void Logic()
@@ -28,7 +29,8 @@ public class BBCharacterController : MonoBehaviour {
 		{
 			mover.Logic();
 			shooter.Logic();
-		}	
+
+        }	
 		else
 		{
 			if (!isActive)

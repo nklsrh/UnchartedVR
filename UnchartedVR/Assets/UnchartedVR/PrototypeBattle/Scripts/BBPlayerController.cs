@@ -1,48 +1,48 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class BBPlayerController : BBCharacterController 
 {
-	public override void Logic()
-	{
-		#if UNITY_EDITOR
-		// if (Input.GetMouseButtonDown(0))
-		// {
-		// 	if (Input.GetKey(KeyCode.LeftShift))
-		// 	{
-		// 		if (ClickAt())
-		// 		{
-		// 			if (shooter.FireAt(hit.point))
-		// 			{
-		// 				BBHealthController healthHit = hit.collider.GetComponent<BBHealthController>();
-		// 				if (healthHit != null)
-		// 				{
-		// 					healthHit.Damage(100);
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// 	else
-		// 	{
-		// 		// move to spot
-		// 		if (ClickAt())
-		// 		{
-		// 			mover.TeleportTo(hit.point);
-		// 		}
-		// 	}
-		// }
-		#endif
-		
-		base.Logic();
-	} 
+    public BBHandController hand;
 
-	RaycastHit hit;
-	Ray ray;
+    void Start()
+    {
+        hand.Setup();
+    }
 
-	bool ClickAt()
-	{
-		ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		return (Physics.Raycast(ray, out hit, 10000));
-	}
+    public void PressActionButton()
+    {
+        NextWeapon();
+    }
+
+    private void NextWeapon()
+    {
+        if (hand != null)
+        {
+            hand.NextWeapon();
+        }
+    }
+
+    public void PressTriggerButton()
+    {
+        FireCurrentWeapon();
+    }
+
+    public void FireCurrentWeapon()
+    {
+        if (hand != null)
+        {
+            hand.Fire();
+        }
+    }
+
+    internal void AimAt(Vector3 position)
+    {
+        if (hand != null)
+        {
+            hand.AimAt(position);
+        }
+    }
 }

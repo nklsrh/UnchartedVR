@@ -7,11 +7,11 @@ public class BBHealthController : MonoBehaviour
     public float maxHealth;
     public float current;
 
-	System.Action OnDeath;
+    public System.Action OnDeath;
+    public System.Action OnDamage;
 
-    public void Setup(System.Action onDeath)
+    public void Setup()
     {
-        this.OnDeath = onDeath;
         Reset();
     }
 
@@ -30,6 +30,13 @@ public class BBHealthController : MonoBehaviour
 			{
             	OnDeath.Invoke();
 			}
+        }
+        else
+        {
+            if (OnDamage != null)
+            {
+                OnDamage.Invoke();
+            }
         }
     }
 

@@ -21,9 +21,6 @@ public class BBVRController : MonoBehaviour
 
     public Transform handTransform;
 
-    Vector3 vel;
-    Vector3 acc;
-
     [Header("Camera")]
     public float cameraHeight = 2.0f;
 
@@ -40,9 +37,7 @@ public class BBVRController : MonoBehaviour
     public float grabDistance = 2.0f;
     public float grabbedObjectLerp = 14.0f;
     public float grabThrowPower = 200.0f;
-
-    float rot;
-
+    public float handRotationLerp = 15f;
 
     float distanceOfLastRaycast;
 
@@ -67,7 +62,6 @@ public class BBVRController : MonoBehaviour
 
         // RaycastGaze();
 
-
         Vector2 touchPadInput =  OVRInput.Get(OVRInput.Axis2D.PrimaryTouchpad);
         Vector3 accelerator = new Vector3(touchPadInput.x, 0, touchPadInput.y);
 
@@ -75,7 +69,7 @@ public class BBVRController : MonoBehaviour
         accelerator = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         if (!IsHolding && !HasHeld)
         {
-            playerController.transform.Rotate(0, accelerator.x, 0);
+            playerController.transform.Rotate(accelerator.z, accelerator.x, 0);
         }
 #endif
 
@@ -83,17 +77,17 @@ public class BBVRController : MonoBehaviour
         
         if (HasHeld)
         {
-            firstPressTeleportPoint = pointerAttack.position;
-            teleportReticule.position = firstPressTeleportPoint;
-            teleportReticule.up = teleportReticuleUpNormal;
-
-            teleportReticule.localScale = Vector3.one * Mathf.Clamp((teleportReticule.position - transform.position).sqrMagnitude * 0.05f, 0.5f, 10);
+            //firstPressTeleportPoint = pointerAttack.position;
+            //teleportReticule.position = firstPressTeleportPoint;
+            //teleportReticule.up = teleportReticuleUpNormal;
+             
+            //teleportReticule.localScale = Vector3.one * Mathf.Clamp((teleportReticule.position - transform.position).sqrMagnitude * 0.05f, 0.5f, 10);
         }
         else if (IsHolding)
         {
-            teleportLookDirection = Camera.main.transform.TransformVector(accelerator);
-            teleportLookDirection.y = 0;
-            teleportReticule.forward = teleportLookDirection;
+            //teleportLookDirection = Camera.main.transform.TransformVector(accelerator);
+            //teleportLookDirection.y = 0;
+            //teleportReticule.forward = teleportLookDirection;
         }
         else if (HasLifted)
         {
@@ -103,13 +97,15 @@ public class BBVRController : MonoBehaviour
 
         if (isJustClicked)
         {
-            playerController.mover.TeleportTo(this.pointerAttack.transform.position);
-            playerController.mover.transform.rotation = Quaternion.LookRotation(teleportLookDirection, Vector3.up);
+            //playerController.mover.TeleportTo(this.pointerAttack.transform.position);
+            //playerController.mover.transform.rotation = Quaternion.LookRotation(teleportLookDirection, Vector3.up);
             // TODO - orient using VR controller's forward direction as well
+
+            playerController.PressActionButton();
         }
 
         transform.position = playerController.transform.position + Vector3.up * cameraHeight;
-        transform.rotation = Quaternion.Euler(0, playerController.transform.rotation.eulerAngles.y, 0);
+        transform.rotation = Quaternion.Euler(playerController.transform.rotation.eulerAngles.x, playerController.transform.rotation.eulerAngles.y, 0);
 
 
         RaycastHand();
@@ -121,6 +117,7 @@ public class BBVRController : MonoBehaviour
     Vector3 smoothenedVelocity;
     Vector3 smoothenedHandMovement;
     Vector3 originalPickupPosition;
+    Vector3 lerpHandForward;
 
     float originalDistanceSquared = 10;
 
@@ -129,12 +126,12 @@ public class BBVRController : MonoBehaviour
         Vector3 newSmoothenedHandMovement = transform.InverseTransformPoint(pointerAttack.position).normalized * grabDistance;// Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
         Vector3 deltaOverFrame = (newSmoothenedHandMovement - smoothenedHandMovement);
         smoothenedVelocity = deltaOverFrame;
-        smoothenedHandMovement = newSmoothenedHandMovement;
+        smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, newSmoothenedHandMovement, grabbedObjectLerp * Time.deltaTime);
 
-        //smoothenedHandMovement = Vector3.Lerp(smoothenedHandMovement, (pointerAttack.position - transform.position).normalized * grabDistance, grabbedObjectLerp * Time.deltaTime);
 #if UNITY_EDITOR
         handTransform.position = transform.TransformPoint(smoothenedHandMovement);
-        //handTransform.forward = (pointerAttack.transform.position - Camera.main.transform.position);
+        lerpHandForward = Vector3.Lerp(lerpHandForward, (pointerAttack.transform.position - handTransform.position), handRotationLerp * Time.deltaTime);
+        handTransform.forward = lerpHandForward;
 #else
         handTransform.position = transform.TransformPoint(smoothenedHandMovement);
         handTransform.rotation = handController.m_model.transform.rotation;
@@ -168,6 +165,8 @@ public class BBVRController : MonoBehaviour
                     currentThrowingObject.transform.rotation = handTransform.rotation;
                 }
             }
+
+            playerController.FireCurrentWeapon();
         }
         else if (currentThrowingObject != null)
         {
@@ -223,6 +222,7 @@ public class BBVRController : MonoBehaviour
 		}
 #endif
 
+        playerController.AimAt(pointerAttack.transform.position);
         colliderLastHit = hitInfoAttack.collider;
     }
 

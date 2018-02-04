@@ -14,6 +14,9 @@ public class BBWeapon : MonoBehaviour
     public float damagePerHit = 10.0f;
 
     public ParticleSystem muzzleFlash;
+    public ParticleSystem hitSparks;
+
+    public float physicsForce = 1000;
 
     float lastTimeShot = -1000;
     
@@ -47,8 +50,27 @@ public class BBWeapon : MonoBehaviour
                 {
                     healtu.Damage(damagePerHit);
                 }
+
+                Rigidbody rig = hit.collider.GetComponent<Rigidbody>();
+                if (rig != null)
+                {
+                    rig.AddForceAtPosition(-hit.normal * physicsForce, hit.point, ForceMode.Impulse);
+                }
+                SuccessfulHit(hit.point);
             }
 
+        }
+    }
+
+    void SuccessfulHit(Vector3 hitPos)
+    {
+        if (hitSparks)
+        {
+            hitSparks.transform.parent = null;
+            hitSparks.transform.position = hitPos;
+            hitSparks.transform.localScale = Vector3.one;
+            hitSparks.transform.forward = -transform.forward;
+            hitSparks.Play();
         }
     }
 }

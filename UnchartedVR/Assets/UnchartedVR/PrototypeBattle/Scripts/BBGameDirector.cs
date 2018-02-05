@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BBGameDirector : MonoBehaviour {
 
+    public BBPlayerController player;
 	public List<BBCharacterController> characters;
 	public BBLevelAIData level;
 
@@ -26,6 +27,10 @@ public class BBGameDirector : MonoBehaviour {
 			{
 				(c.mover as BBAIMover).SetupAI(level);
 			}
+            if (c is BBAIController)
+            {
+                (c as BBAIController).SetPlayer(player);
+            }
 		}
 
 		vrController.Setup();

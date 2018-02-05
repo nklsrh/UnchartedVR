@@ -21,6 +21,15 @@ public class BBAIController : BBCharacterController
 
     public ParticleSystem particleSparks;
 
+    public ProjectileEnemy prefabProjectile;
+    
+    public float projectileThrowWait = 1.0f;
+    public int projectilesThrownAtOnce = 1;
+    float waitProjectileTime = -1.0f;
+    bool canFireAtPlayer = false;
+
+    BBPlayerController player;
+
     public override void Setup()
     {
         base.Setup();
@@ -28,6 +37,11 @@ public class BBAIController : BBCharacterController
         health.OnDamage += Damaged;
 
         SetupHealthUI();
+    }
+
+    internal void SetPlayer(BBPlayerController player)
+    {
+        this.player = player;
     }
 
     private void SetupHealthUI()
@@ -94,6 +108,8 @@ public class BBAIController : BBCharacterController
         {
             particleSparks.Play();
         }
+
+        canFireAtPlayer = true;
     }
 
     public override void Logic()
@@ -124,9 +140,41 @@ public class BBAIController : BBCharacterController
             }
         }
         imgHealth.canvas.transform.LookAt(-Camera.main.transform.forward);
+
+
+        if (canFireAtPlayer)
+        {
+            FireLogic();
+        }
     }
 
-	public override void Respawn()
+    private void FireLogic()
+    {
+        if (waitProjectileTime <= 0)
+        {
+            if (player != null)
+            {
+                for (int i = 0; i < projectilesThrownAtOnce; i++)
+                {
+                    ProjectileEnemy g = Instantiate(prefabProjectile);
+                    g.transform.position = transform.position 
+                        + Vector3.forward * 1.0f 
+                        + Vector3.up * 1.0f * i;
+
+                    g.transform.localScale = Vector3.one;
+
+                    g.FireAt(player.transform.position);
+                }
+                waitProjectileTime = projectileThrowWait;
+            }
+        }
+        else
+        {
+            waitProjectileTime -= Time.deltaTime;
+        }
+    }
+
+    public override void Respawn()
 	{
         base.Respawn();
         
